@@ -2,13 +2,14 @@
 
 Ruta de estudio 1 a 1 (2 h) con temática de Halloween para Alejo, que se prepara para una pasantía: bases de datos → SQL/INSERT → procedimientos → conector C# seguro (Npgsql, TLS, parámetros) → CRUD en código → LINQ con EF Core → Scrum/Kanban.
 
-- Web (artifact privado: compartir desde el menú Share): https://claude.ai/artifact/Cxf5EteA9mqBnCyFUTK5e7
+- Web pública (GitHub Pages): https://cassers.github.io/clase-bd-conectores/
+- Web en Claude (artifact): https://claude.ai/artifact/Cxf5EteA9mqBnCyFUTK5e7
 - `01_base_puente.sql`: base inicial en PostgreSQL/Supabase; se puede volver a ejecutar para resetear
 - `02_demo_inserts_procedimientos.sql`: demo en vivo de los 7 INSERT, el CRUD y CALL
 - `03_ruta_y_misiones.md`: guía para el estudiante (orden, misiones, preguntas de entrevista, plan de 4 semanas)
 - `csharp/`: consola .NET 8 con 5 demos (`dotnet run -- 0` corre todas). Configurar `.env` desde `.env.example`
 - `soluciones/`: solucionario SQL y C# (solo para el profe)
-- `web/template.html`: fuente de la web; `python3 build.py` genera `web/puente-cuantico.html`
+- `web/template.html`: fuente de la web; `python3 build.py` genera `web/puente-cuantico.html` (artifact) e `index.html` (GitHub Pages, se actualiza con cada push a `main`)
 
 ## Probar sin instalar .NET ni Postgres (Docker)
 
