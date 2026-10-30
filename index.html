@@ -380,9 +380,10 @@ SELECT * FROM ranking_escuadron(1);       -- función: dentro de un SELECT</pre>
       <div class="table-wrap"><table>
         <tr><th>Regla</th><th>Mal</th><th>Bien</th></tr>
         <tr><td><b>1. La clave no va en el código</b></td><td class="mono">Password=MiClave123 en Program.cs</td><td>En <code>.env</code> o variables de entorno; <code>.env</code> va en <code>.gitignore</code></td></tr>
-        <tr><td><b>2. Cifrado, no texto plano</b></td><td class="mono">SslMode=Disable</td><td><code>SslMode=Require</code> (o <code>VerifyFull</code>): TLS cifra todo lo que viaja</td></tr>
+        <tr><td><b>2. Cifrado, no texto plano</b></td><td class="mono">SslMode=Disable</td><td><code>Require</code> cifra con TLS. <code>VerifyFull</code> además comprueba el certificado: es lo que pide producción</td></tr>
         <tr><td><b>3. Parámetros, nunca texto pegado</b></td><td class="mono">$"... WHERE usuario = '{usuario}'"</td><td><code>WHERE usuario = @usuario</code> + <code>Parameters.AddWithValue</code></td></tr>
       </table></div>
+      <p class="note"><b>Require y VerifyFull no son iguales.</b> <code>Require</code> cifra el tráfico, pero acepta cualquier certificado: alguien en medio de la red podría hacerse pasar por el servidor. <code>VerifyFull</code> cifra y además comprueba que el certificado sea del servidor real. Para usarlo, descarga el certificado en Supabase → <b>Database → Settings → SSL Configuration</b> y pon su ruta en <code>DB_ROOT_CERT</code> del <code>.env</code>. En clase usamos <code>Require</code> para que sea simple; en producción, <code>VerifyFull</code>.</p>
       <pre data-lang="cs">var builder = new NpgsqlConnectionStringBuilder
 {
     Host = Environment.GetEnvironmentVariable("DB_HOST"),
@@ -396,7 +397,13 @@ await using var fuente = NpgsqlDataSource.Create(builder.ConnectionString);
 await using var cmd = fuente.CreateCommand(
     "SELECT usuario, nivel FROM codigos_acceso WHERE usuario = @usuario AND clave = @clave");
 cmd.Parameters.AddWithValue("usuario", usuario);   // el dato viaja aparte del SQL
-cmd.Parameters.AddWithValue("clave", clave);</pre>
+cmd.Parameters.AddWithValue("clave", clave);
+
+// AddWithValue deduce el tipo SQL a partir del tipo de C# (string → text, int → integer).
+// Cuando el tipo es ambiguo (fechas, JSON, null), decláralo tú:
+cmd.Parameters.Add(new NpgsqlParameter("datos", NpgsqlDbType.Jsonb) { Value = json });
+cmd.Parameters.Add(new NpgsqlParameter&lt;DateTime&gt;("desde", DateTime.UtcNow));   // timestamptz exige UTC</pre>
+      <p class="note danger"><b>Lo que los parámetros NO protegen.</b> Un parámetro solo puede ser un <b>valor</b>. No sirve para nombres de tabla o columna, ni para la dirección de un <code>ORDER BY</code>. Si el usuario elige por qué columna ordenar, compara su elección con una lista fija de columnas permitidas y nunca pegues su texto. Lo mismo pasa en Entity Framework: <code>FromSqlRaw</code> con texto concatenado vuelve a ser inseguro, y <code>FromSqlInterpolated</code> sí parametriza.</p>
 
       <div class="sim" id="sim">
         <p class="sim-title">Simulador · el Fantasma Inyector 👻</p>

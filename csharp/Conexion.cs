@@ -15,10 +15,12 @@ static class Conexion
             Username = Leer("DB_USER"),
             Password = Leer("DB_PASSWORD"),
             Database = Leer("DB_NAME", "postgres"),
-            // Require  = el tráfico viaja cifrado con TLS (nadie en la red puede leer claves ni datos).
+            // Require  = el tráfico viaja cifrado con TLS, pero NO verifica el certificado del servidor.
             // Disable  = texto plano: solo aceptable en tu propia máquina (Docker local).
             // VerifyFull = cifrado + verifica el certificado del servidor (lo ideal en producción).
             SslMode = Enum.Parse<SslMode>(Leer("DB_SSL", "Require")),
+            // Solo para VerifyFull: ruta al certificado raíz que descargas de Supabase.
+            RootCertificate = Environment.GetEnvironmentVariable("DB_ROOT_CERT"),
         };
         return builder.ConnectionString;
     }

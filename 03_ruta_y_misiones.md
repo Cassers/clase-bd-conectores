@@ -125,7 +125,7 @@ Un **conector** (driver) es la librería que deja a un lenguaje hablar con la ba
 Las 3 reglas de un conector seguro:
 
 1. **La clave nunca va en el código.** Va en variables de entorno o en `.env`, y `.env` va en `.gitignore`.
-2. **Conexión cifrada, no texto plano.** `SslMode=Require` (o `VerifyFull`) cifra con TLS todo lo que viaja por la red. En texto plano, cualquiera en la misma red puede leer claves y datos.
+2. **Conexión cifrada, no texto plano.** `SslMode=Require` cifra con TLS todo lo que viaja por la red, pero acepta cualquier certificado. `VerifyFull` además comprueba que el certificado sea del servidor real, lo que evita que alguien en medio de la red se haga pasar por él: es lo que se usa en producción (descarga el certificado en Supabase → Database → Settings → SSL Configuration y pon su ruta en `DB_ROOT_CERT`). En texto plano, cualquiera en la misma red puede leer claves y datos.
 3. **Consultas parametrizadas, nunca SQL armado con texto.** Si pegas lo que escribe el usuario dentro del SQL, te pueden hacer **SQL injection**.
 
 ```csharp
@@ -135,7 +135,14 @@ $"SELECT * FROM codigos_acceso WHERE usuario = '{usuario}' AND clave = '{clave}'
 // ✅ Seguro: SQL y datos viajan por separado
 cmd.CommandText = "SELECT * FROM codigos_acceso WHERE usuario = @usuario AND clave = @clave";
 cmd.Parameters.AddWithValue("usuario", usuario);
+
+// Si el tipo es ambiguo (fechas, JSON, null), decláralo:
+cmd.Parameters.Add(new NpgsqlParameter("datos", NpgsqlDbType.Jsonb) { Value = json });
 ```
+
+> `AddWithValue` no está obsoleto en Npgsql: deduce el tipo SQL a partir del tipo de C#. Declara el tipo cuando la deducción no alcanza: `DateTime` contra `timestamptz` (debe ir en UTC), JSON o valores `null`.
+>
+> **Lo que los parámetros NO protegen:** un parámetro solo puede ser un *valor*. Los nombres de tabla o columna y el `ASC`/`DESC` de un `ORDER BY` no se pueden parametrizar: si vienen del usuario, compáralos con una lista fija de opciones permitidas. En EF Core, `FromSqlRaw` con texto concatenado es inseguro y `FromSqlInterpolated` sí parametriza.
 
 | # | Misión | Resultado esperado |
 |---|---|---|
