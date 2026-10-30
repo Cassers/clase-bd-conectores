@@ -1,0 +1,845 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Operación Puente Cuántico</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: plano técnico (cianotipo) de un puente. Riel izquierdo fijo con la ruta de 7 tramos y el progreso; columna de contenido a la derecha. En móvil el riel pasa a una barra superior. */
+:root {
+  --paper: #e9f0f6;
+  --sheet: #f6f9fc;
+  --ink: #0f2d4a;
+  --ink-soft: #4a6680;
+  --grid: #c9d8e6;
+  --rule: #a9bfd3;
+  --prussian: #1d4f80;
+  --signal: #c96a00;
+  --danger: #b4233a;
+  --safe: #1f7a52;
+  --code-bg: #0f2d4a;
+  --code-ink: #e3eef8;
+  --code-kw: #8cc8ff;
+  --code-str: #ffc477;
+  --code-com: #8aa4bb;
+  --display: "Big Shoulders Display", "Arial Narrow", Impact, sans-serif;
+  --body: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --paper: #0b1d30; --sheet: #10263d; --ink: #dce9f5; --ink-soft: #93adc6; --grid: #183553; --rule: #285077;
+  --prussian: #7fb8f0; --signal: #ffad4a; --danger: #ff7088; --safe: #5fd6a0;
+  --code-bg: #071524; --code-ink: #dce9f5; --code-kw: #8cc8ff; --code-str: #ffc477; --code-com: #6f8ba5; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --paper: #0b1d30; --sheet: #10263d; --ink: #dce9f5; --ink-soft: #93adc6; --grid: #183553; --rule: #285077;
+  --prussian: #7fb8f0; --signal: #ffad4a; --danger: #ff7088; --safe: #5fd6a0;
+  --code-bg: #071524; --code-ink: #dce9f5; --code-kw: #8cc8ff; --code-str: #ffc477; --code-com: #6f8ba5; color-scheme: dark; }
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 80px; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } * { transition: none !important; animation: none !important; } }
+body { margin: 0; color: var(--ink); font: 17px/1.62 var(--body);
+  background: var(--paper);
+  background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 28px 28px; background-attachment: fixed; }
+a { color: var(--prussian); }
+:focus-visible { outline: 2px solid var(--signal); outline-offset: 2px; }
+
+.shell { display: grid; grid-template-columns: minmax(0, 1fr); max-width: 1180px; margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+@media (min-width: 960px) { .shell { grid-template-columns: 250px minmax(0, 1fr); gap: 48px; } }
+
+/* Riel de la ruta */
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--paper); }
+.rail { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--paper); border-bottom: 1px solid var(--rule);
+  margin-inline: calc(-1 * max(16px, env(safe-area-inset-left, 0px))); padding: 10px max(16px, env(safe-area-inset-left, 0px)); }
+.rail-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.rank { font: 800 20px/1 var(--display); letter-spacing: .04em; text-transform: uppercase; color: var(--prussian); }
+.rank small { display: block; font: 400 12px/1.3 var(--body); letter-spacing: 0; text-transform: none; color: var(--ink-soft); margin-top: 3px; }
+.meter { flex: 1; max-width: 220px; height: 8px; border: 1px solid var(--rule); border-radius: 4px; background: var(--sheet); overflow: hidden; }
+.meter i { display: block; height: 100%; width: 0; background: var(--prussian); transition: width .5s ease; }
+.route { display: flex; gap: 6px; list-style: none; margin: 10px 0 0; padding: 0; overflow-x: auto; scrollbar-width: none; }
+.route::-webkit-scrollbar { display: none; }
+.route a { display: flex; align-items: center; gap: 8px; text-decoration: none; color: var(--ink-soft); white-space: nowrap;
+  font: 600 13px/1 var(--body); padding: 7px 10px; border: 1px solid var(--rule); border-radius: 4px; background: var(--sheet); }
+.route a .n { font: 600 11px/1 var(--mono); }
+.route a.done { color: var(--safe); border-color: var(--safe); }
+.route a.current { color: var(--ink); border-color: var(--prussian); }
+@media (min-width: 960px) {
+  .rail { top: 0; height: 100vh; margin: 0; padding: 40px 0; border: 0; background: transparent; display: flex; flex-direction: column; gap: 24px; }
+  .rail-head { flex-direction: column; align-items: stretch; }
+  .meter { max-width: none; flex: none; }
+  .route { flex-direction: column; gap: 0; margin: 0; position: relative; }
+  .route::before { content: ""; position: absolute; left: 11px; top: 14px; bottom: 14px; width: 2px; background: var(--rule); }
+  .route a { border: 0; background: transparent; padding: 9px 0; white-space: normal; position: relative; font-size: 14px; }
+  .route a .n { width: 24px; height: 24px; flex: none; display: grid; place-items: center; border-radius: 50%;
+    border: 2px solid var(--rule); background: var(--paper); color: var(--ink-soft); z-index: 1; }
+  .route a.done .n { background: var(--safe); border-color: var(--safe); color: var(--paper); }
+  .route a.current .n { border-color: var(--prussian); color: var(--prussian); }
+}
+
+main { min-width: 0; padding-block: 32px 96px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 40px; }
+
+/* Portada */
+.hero { display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; padding-top: 8px; }
+.stamp { font: 600 12px/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--ink-soft);
+  display: flex; flex-wrap: wrap; gap: 6px 16px; }
+h1 { font: 800 clamp(48px, 9vw, 92px)/.9 var(--display); margin: 0; text-transform: uppercase; letter-spacing: .01em; text-wrap: balance; color: var(--ink); }
+h1 span { color: var(--prussian); }
+.lede { max-width: 60ch; margin: 0; font-size: 19px; color: var(--ink-soft); }
+.lede b { color: var(--ink); }
+
+/* Plano del puente (SVG) */
+.blueprint { border: 1px solid var(--rule); background: var(--sheet); border-radius: 6px; padding: 16px; overflow-x: auto; }
+.blueprint svg { display: block; width: 100%; min-width: 620px; height: auto; }
+.blueprint .cap { font: 400 12px/1.4 var(--mono); color: var(--ink-soft); margin-top: 8px; }
+
+/* Secciones */
+.sheet { background: var(--sheet); border: 1px solid var(--rule); border-radius: 6px; padding: 28px clamp(18px, 4vw, 40px); display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; min-width: 0; }
+.sheet > * { min-width: 0; }
+.eyebrow { font: 600 12px/1 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--prussian); }
+h2 { font: 800 clamp(32px, 5vw, 44px)/1 var(--display); text-transform: uppercase; margin: 0; text-wrap: balance; }
+h3 { font: 700 18px/1.3 var(--body); margin: 8px 0 0; }
+p { margin: 0; max-width: 68ch; }
+.sheet ul:not(.missions) { margin: 0; padding-left: 20px; max-width: 68ch; display: grid; gap: 4px; }
+.note { border-left: 3px solid var(--signal); padding: 10px 14px; background: color-mix(in srgb, var(--signal) 9%, transparent); max-width: 68ch; }
+.note.danger { border-color: var(--danger); background: color-mix(in srgb, var(--danger) 8%, transparent); }
+code { font: 0.88em var(--mono); background: color-mix(in srgb, var(--prussian) 12%, transparent); padding: 1px 5px; border-radius: 3px; }
+
+.table-wrap { overflow-x: auto; border: 1px solid var(--rule); border-radius: 4px; }
+table { border-collapse: collapse; width: 100%; font-size: 15px; min-width: 460px; }
+th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--rule); vertical-align: top; }
+th { font: 600 12px/1.2 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--ink-soft); background: color-mix(in srgb, var(--prussian) 6%, transparent); }
+tr:last-child td { border-bottom: 0; }
+.mono { font-family: var(--mono); font-size: 14px; }
+
+pre { margin: 0; background: var(--code-bg); color: var(--code-ink); border-radius: 6px; padding: 16px 18px; overflow-x: auto;
+  font: 14px/1.6 var(--mono); position: relative; }
+pre .k { color: var(--code-kw); font-weight: 600; } pre .s { color: var(--code-str); } pre .c { color: var(--code-com); font-style: italic; }
+.copy { position: absolute; top: 8px; right: 8px; font: 600 11px/1 var(--mono); color: var(--code-ink); background: transparent;
+  border: 1px solid var(--code-com); border-radius: 4px; padding: 6px 8px; cursor: pointer; }
+.copy:hover { border-color: var(--code-ink); }
+
+/* Misiones */
+.missions { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.missions li { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; align-items: start; padding: 12px 14px;
+  border: 1px solid var(--rule); border-radius: 4px; background: var(--paper); }
+.missions li.boss { border-color: var(--danger); }
+.missions input { width: 20px; height: 20px; margin: 3px 0 0; accent-color: var(--safe); cursor: pointer; }
+.missions label { cursor: pointer; }
+.missions .id { font: 600 12px/1 var(--mono); color: var(--prussian); margin-right: 6px; }
+.missions li.boss .id { color: var(--danger); }
+.missions .exp { grid-column: 2; font: 13px/1.4 var(--mono); color: var(--ink-soft); }
+.missions li.checked { border-color: var(--safe); }
+.missions li.checked label { color: var(--ink-soft); text-decoration: line-through; text-decoration-color: var(--safe); }
+
+/* Simulador de inyección */
+.sim { border: 2px solid var(--danger); border-radius: 6px; padding: 18px; display: grid; gap: 14px; background: var(--paper); }
+.sim-title { font: 800 24px/1 var(--display); text-transform: uppercase; color: var(--danger); margin: 0; }
+.sim-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; }
+.sim label { font: 600 12px/1 var(--mono); text-transform: uppercase; letter-spacing: .08em; color: var(--ink-soft); display: grid; gap: 6px; }
+.sim input[type=text] { font: 15px var(--mono); padding: 10px 12px; border: 1px solid var(--rule); border-radius: 4px; background: var(--sheet); color: var(--ink); width: 100%; }
+.presets { display: flex; flex-wrap: wrap; gap: 8px; }
+.presets button, .btn { font: 600 13px/1 var(--body); padding: 9px 12px; border-radius: 4px; border: 1px solid var(--rule); background: var(--sheet); color: var(--ink); cursor: pointer; }
+.presets button:hover, .btn:hover { border-color: var(--prussian); }
+.sim-out { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+.panel { border: 1px solid var(--rule); border-radius: 4px; padding: 12px; display: grid; gap: 8px; align-content: start; min-width: 0; background: var(--sheet); }
+.panel h4 { margin: 0; font: 700 14px/1.2 var(--body); }
+.panel.bad h4 { color: var(--danger); } .panel.good h4 { color: var(--safe); }
+.panel .q { font: 13px/1.55 var(--mono); background: var(--code-bg); color: var(--code-ink); padding: 10px; border-radius: 4px; overflow-x: auto; white-space: pre-wrap; word-break: break-word; }
+.panel .q mark { background: var(--danger); color: #fff; border-radius: 2px; padding: 0 2px; }
+.panel .q .p { color: var(--code-str); }
+.verdict { font: 600 14px/1.4 var(--body); }
+.verdict.bad { color: var(--danger); } .verdict.good { color: var(--safe); }
+.verdict ul { margin: 4px 0 0; padding-left: 18px; font: 13px/1.5 var(--mono); }
+
+/* Kanban */
+.board { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+@media (max-width: 560px) { .board { grid-template-columns: 1fr; } }
+.col { border: 1px dashed var(--rule); border-radius: 4px; padding: 10px; display: grid; gap: 8px; align-content: start; min-height: 120px; }
+.col h4 { margin: 0; font: 600 12px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-soft); display: flex; justify-content: space-between; }
+.col.over h4 { color: var(--danger); }
+.card { text-align: left; font: 14px/1.35 var(--body); padding: 10px; border: 1px solid var(--rule); border-left: 3px solid var(--prussian); border-radius: 3px; background: var(--sheet); color: var(--ink); cursor: pointer; }
+.card:hover { border-color: var(--prussian); }
+.col[data-col="2"] .card { border-left-color: var(--safe); }
+
+.qs { margin: 0; padding-left: 22px; display: grid; gap: 8px; max-width: 68ch; }
+details { border: 1px solid var(--rule); border-radius: 4px; padding: 10px 14px; background: var(--paper); }
+summary { cursor: pointer; font-weight: 700; }
+footer { font: 13px/1.5 var(--mono); color: var(--ink-soft); }
+</style>
+
+<div class="shell">
+  <aside class="rail" aria-label="Ruta de estudio">
+    <div class="rail-head">
+      <div class="rank" id="rank">Recluta<small id="rankSub">0 de 0 misiones</small></div>
+      <div class="meter" aria-hidden="true"><i id="meter"></i></div>
+    </div>
+    <ol class="route" id="route">
+      <li><a href="#p1" data-step="p1"><span class="n">1</span>¿Qué es una base de datos?</a></li>
+      <li><a href="#p2" data-step="p2"><span class="n">2</span>SQL: CRUD e INSERT</a></li>
+      <li><a href="#p3" data-step="p3"><span class="n">3</span>Procedimientos</a></li>
+      <li><a href="#p4" data-step="p4"><span class="n">4</span>Conector seguro</a></li>
+      <li><a href="#p5" data-step="p5"><span class="n">5</span>CRUD en C#</a></li>
+      <li><a href="#p6" data-step="p6"><span class="n">6</span>LINQ</a></li>
+      <li><a href="#p7" data-step="p7"><span class="n">7</span>Scrum y Kanban</a></li>
+    </ol>
+  </aside>
+
+  <main>
+    <header class="hero">
+      <div class="stamp"><span>Discamus Academy</span><span>Plano DA-07 · Puente C# ↔ PostgreSQL</span><span>Ruta 1 a 1 · 2 h</span></div>
+      <h1>Operación <span>Puente Cuántico</span></h1>
+      <p class="lede">La nave necesita conectar su software de control, hecho en <b>C#</b>, con la base de datos de la tripulación, en <b>PostgreSQL</b>. El <b>Fantasma Inyector</b> busca colarse por cualquier conector mal hecho. Son 7 tramos en orden: cada uno se apoya en el anterior, así que no hay que estudiarlo todo a la vez. Marca cada misión al completarla y verás subir tu rango.</p>
+      <div class="blueprint">
+        <svg viewBox="0 0 760 210" role="img" aria-label="Diagrama: la app en C# usa un conector (Npgsql o Entity Framework con LINQ) que viaja cifrado hasta PostgreSQL, donde viven tablas, SQL y procedimientos">
+          <g fill="none" stroke="var(--prussian)" stroke-width="2">
+            <rect x="10" y="60" width="170" height="100" rx="4" fill="var(--paper)"/>
+            <rect x="580" y="60" width="170" height="100" rx="4" fill="var(--paper)"/>
+            <path d="M180 110 Q 380 10 580 110"/>
+            <line x1="180" y1="110" x2="580" y2="110" stroke-dasharray="6 6"/>
+            <line x1="280" y1="62" x2="280" y2="110"/><line x1="380" y1="48" x2="380" y2="110"/><line x1="480" y1="62" x2="480" y2="110"/>
+          </g>
+          <g font-family="JetBrains Mono, monospace" font-size="12" fill="var(--ink)">
+            <text x="95" y="92" text-anchor="middle" font-weight="600">APP EN C#</text>
+            <text x="95" y="114" text-anchor="middle" fill="var(--ink-soft)">Tramos 5 y 6</text>
+            <text x="95" y="134" text-anchor="middle" fill="var(--ink-soft)">CRUD · LINQ</text>
+            <text x="665" y="92" text-anchor="middle" font-weight="600">POSTGRESQL</text>
+            <text x="665" y="114" text-anchor="middle" fill="var(--ink-soft)">Tramos 1, 2 y 3</text>
+            <text x="665" y="134" text-anchor="middle" fill="var(--ink-soft)">tablas · SQL · CALL</text>
+            <text x="380" y="132" text-anchor="middle" font-weight="600" fill="var(--prussian)">TRAMO 4 · CONECTOR (Npgsql)</text>
+            <text x="380" y="152" text-anchor="middle" fill="var(--safe)">TLS cifrado · parámetros · .env</text>
+            <text x="380" y="196" text-anchor="middle" fill="var(--ink-soft)">Tramo 7 · Scrum / Kanban: cómo se organiza el equipo que construye el puente</text>
+          </g>
+        </svg>
+        <div class="cap">SQL es el idioma de la base. LINQ es de C#: Entity Framework lo traduce a SQL por ti.</div>
+      </div>
+    </header>
+
+    <section class="sheet" id="prep">
+      <div class="eyebrow">Antes de empezar · 10 min</div>
+      <h2>Prepara el taller</h2>
+      <ul>
+        <li>Crea un proyecto gratis en <a href="https://supabase.com" target="_blank" rel="noopener">supabase.com</a>. Entra a <b>SQL Editor</b> → <b>New query</b>, pega el script de abajo y dale <b>Run</b>. Debe mostrar <b>8 tripulantes</b>.</li>
+        <li>Instala el <a href="https://dotnet.microsoft.com/download" target="_blank" rel="noopener">.NET 8 SDK</a> y comprueba con <code>dotnet --version</code>.</li>
+        <li>Pídele al profe la carpeta <code>csharp/</code>. Copia <code>.env.example</code> como <code>.env</code> y llénalo con los datos de Supabase → <b>Connect</b> → <b>Session pooler</b>.</li>
+        <li>Ejecuta <code>dotnet run</code> y elige <code>1</code>. Si ves 🔒 <b>Conexión CIFRADA</b>, el puente está listo.</li>
+      </ul>
+      <details>
+        <summary>Script inicial de la base (se puede volver a correr para resetear)</summary>
+        <pre data-lang="sql" id="seedPre" style="margin-top:12px;max-height:420px"></pre>
+      </details>
+      <pre data-lang="txt">escuadrones 1───* tripulantes 1───* asignaciones *───1 misiones
+codigos_acceso   la tabla secreta que quiere el Fantasma
+bitacora         la llenan los procedimientos
+reportes_nave    documentos JSON: el lado "no relacional"</pre>
+    </section>
+
+    <section class="sheet" id="p1">
+      <div class="eyebrow">Tramo 1 de 7 · 10 min</div>
+      <h2>¿Qué es una base de datos?</h2>
+      <p>Una base de datos guarda información de forma organizada para que muchos programas la consulten sin perderla ni duplicarla. Hay dos grandes familias.</p>
+      <div class="table-wrap"><table>
+        <tr><th></th><th>Relacional</th><th>No relacional (NoSQL)</th></tr>
+        <tr><td><b>Ejemplos</b></td><td>PostgreSQL, MySQL, SQL Server, Oracle</td><td>MongoDB, Firebase, Redis, DynamoDB</td></tr>
+        <tr><td><b>Forma</b></td><td>Tablas con filas y columnas fijas</td><td>Documentos JSON, clave-valor, grafos</td></tr>
+        <tr><td><b>Esquema</b></td><td>Se define antes de guardar</td><td>Flexible: cada registro trae sus campos</td></tr>
+        <tr><td><b>Relaciones</b></td><td><code>JOIN</code> usando llaves</td><td>Datos anidados o duplicados</td></tr>
+        <tr><td><b>Garantías</b></td><td>ACID: todo o nada</td><td>Varía; prioriza escala y velocidad</td></tr>
+        <tr><td><b>Úsala para</b></td><td>Usuarios, pedidos, notas, pagos</td><td>Logs, catálogos cambiantes, caché, chats</td></tr>
+      </table></div>
+      <p><b>Llave primaria</b>: identifica cada fila (<code>id</code>). <b>Llave foránea</b>: una columna que apunta a otra tabla (<code>escuadron_id → escuadrones.id</code>).</p>
+      <pre data-lang="sql">-- Relacional: unir tablas por sus llaves
+SELECT t.nombre, e.nombre AS escuadron
+FROM tripulantes t
+JOIN escuadrones e ON e.id = t.escuadron_id;
+
+-- "No relacional": cada documento trae los campos que quiera
+SELECT documento->>'nave' AS nave, documento->'alertas' AS alertas
+FROM reportes_nave
+WHERE documento ? 'alertas';</pre>
+      <ul class="missions" data-step="p1">
+        <li data-id="R1"><span class="id">R1</span>¿Qué tabla une a los tripulantes con las misiones? ¿Por qué hace falta una tabla en medio?<span class="exp">→ asignaciones (relación muchos a muchos)</span></li>
+        <li data-id="R2"><span class="id">R2</span>Consulta los <code>reportes_nave</code> cuyo documento tiene la llave <code>combustible</code>.<span class="exp">→ 2 filas</span></li>
+        <li data-id="R3"><span class="id">R3</span>Muestra cada tripulante con el nombre de su escuadrón usando <code>JOIN</code>.<span class="exp">→ 8 filas</span></li>
+      </ul>
+    </section>
+
+    <section class="sheet" id="p2">
+      <div class="eyebrow">Tramo 2 de 7 · 25 min</div>
+      <h2>SQL: CRUD e INSERT</h2>
+      <p><b>SQL</b> es el idioma universal de las bases relacionales: lo que aprendas aquí sirve en Postgres, MySQL y SQL Server. Todo sistema hace cuatro cosas con sus datos, y se resumen en <b>CRUD</b>.</p>
+      <div class="table-wrap"><table>
+        <tr><th>Letra</th><th>SQL</th><th>Ejemplo</th></tr>
+        <tr><td><b>C</b>reate</td><td class="mono">INSERT</td><td class="mono">INSERT INTO misiones (nombre, destino, dificultad) VALUES ('X', 'Marte', 2);</td></tr>
+        <tr><td><b>R</b>ead</td><td class="mono">SELECT</td><td class="mono">SELECT nombre, puntos FROM tripulantes WHERE rango = 'Piloto';</td></tr>
+        <tr><td><b>U</b>pdate</td><td class="mono">UPDATE</td><td class="mono">UPDATE tripulantes SET puntos = 100 WHERE id = 3;</td></tr>
+        <tr><td><b>D</b>elete</td><td class="mono">DELETE</td><td class="mono">DELETE FROM tripulantes WHERE id = 3;</td></tr>
+      </table></div>
+      <p class="note danger"><b>UPDATE y DELETE sin WHERE afectan toda la tabla.</b> Es el error más famoso de las pasantías. Antes de ejecutarlos, prueba el mismo WHERE con un SELECT.</p>
+      <h3>Los 7 INSERT que más vas a usar</h3>
+      <pre data-lang="sql">-- 1) Una fila, nombrando columnas (siempre nombrarlas)
+INSERT INTO escuadrones (nombre, color) VALUES ('Pegaso', 'blanco');
+
+-- 2) Varias filas de una vez
+INSERT INTO misiones (nombre, destino, dificultad) VALUES
+  ('Ruta de Hielo', 'Europa', 2),
+  ('Faro Rojo',     'Marte',  3);
+
+-- 3) Dejar que la base ponga los DEFAULT (rango, puntos, fecha...)
+INSERT INTO tripulantes (nombre, email, escuadron_id)
+VALUES ('Alejo', 'alejo@discamus.net', 1);
+
+-- 4) RETURNING: devuelve el id que generó la base (clave desde código)
+INSERT INTO tripulantes (nombre, email, escuadron_id)
+VALUES ('Lucía', 'lucia@discamus.net', 2)
+RETURNING id, rango, puntos;
+
+-- 5) INSERT ... SELECT: insertar el resultado de una consulta
+INSERT INTO asignaciones (tripulante_id, mision_id, rol)
+SELECT t.id, m.id, 'Piloto'
+FROM tripulantes t, misiones m
+WHERE t.rango = 'Piloto' AND m.nombre = 'Faro Rojo';
+
+-- 6) No fallar si ya existe
+INSERT INTO escuadrones (nombre, color) VALUES ('Orión', 'azul')
+ON CONFLICT (nombre) DO NOTHING;
+
+-- 7) Upsert: si existe, actualiza
+INSERT INTO escuadrones (nombre, color) VALUES ('Orión', 'azul eléctrico')
+ON CONFLICT (nombre) DO UPDATE SET color = EXCLUDED.color;</pre>
+      <ul class="missions" data-step="p2">
+        <li data-id="I1"><span class="id">I1</span>Inserta un escuadrón con tu nombre y tu color favorito.<span class="exp">→ 1 fila nueva</span></li>
+        <li data-id="I2"><span class="id">I2</span>Inserta 3 misiones en un solo <code>INSERT</code>.<span class="exp">→ 3 filas</span></li>
+        <li data-id="I3"><span class="id">I3</span>Inscríbete como tripulante usando los valores por defecto y <code>RETURNING</code>.<span class="exp">→ rango Recluta, 0 puntos</span></li>
+        <li data-id="I4"><span class="id">I4</span>Asígnate a la misión <b>Eco Lunar</b> con <code>INSERT … SELECT</code>, sin escribir ningún id a mano.<span class="exp">→ 1 fila en asignaciones</span></li>
+        <li data-id="I5"><span class="id">I5</span>Cambia el color de tu escuadrón con un upsert.<span class="exp">→ color cambiado</span></li>
+        <li data-id="I6"><span class="id">I6</span>Provoca a propósito 3 errores: email repetido, escuadrón inexistente y rango inventado. Anota qué regla saltó en cada uno.<span class="exp">→ UNIQUE, FOREIGN KEY, CHECK</span></li>
+      </ul>
+    </section>
+
+    <section class="sheet" id="p3">
+      <div class="eyebrow">Tramo 3 de 7 · 15 min</div>
+      <h2>Procedimientos y funciones</h2>
+      <ul>
+        <li><b>PROCEDURE</b>: ejecuta acciones (insertar, actualizar, registrar). Se llama con <code>CALL</code>.</li>
+        <li><b>FUNCTION</b>: devuelve un valor o una tabla. Se usa dentro de un <code>SELECT</code>.</li>
+        <li>La lógica vive <b>dentro de la base</b>: es igual para cualquier lenguaje que se conecte, y se ejecuta <b>todo o nada</b>.</li>
+      </ul>
+      <pre data-lang="sql">CREATE PROCEDURE transferir_puntos(p_origen int, p_destino int, p_cantidad int)
+LANGUAGE plpgsql AS $$
+BEGIN
+  UPDATE tripulantes SET puntos = puntos + p_cantidad WHERE id = p_destino;
+
+  -- Si el origen no tiene suficientes, el error deshace TODO,
+  -- incluido el UPDATE de arriba. Nadie gana puntos de la nada.
+  IF (SELECT puntos FROM tripulantes WHERE id = p_origen) &lt; p_cantidad THEN
+    RAISE EXCEPTION 'Puntos insuficientes';
+  END IF;
+
+  UPDATE tripulantes SET puntos = puntos - p_cantidad WHERE id = p_origen;
+END;
+$$;
+
+CALL transferir_puntos(1, 8, 100);        -- procedimiento: CALL
+SELECT * FROM ranking_escuadron(1);       -- función: dentro de un SELECT</pre>
+      <ul class="missions" data-step="p3">
+        <li data-id="P1"><span class="id">P1</span><code>CALL registrar_tripulante('Nombre', 'correo@x.net', 2)</code> para un compañero y revisa la tabla <code>bitacora</code>.<span class="exp">→ 1 evento ALTA</span></li>
+        <li data-id="P2"><span class="id">P2</span>Ejecuta <code>CALL transferir_puntos(8, 1, 5000);</code> y luego revisa los puntos de los tripulantes 1 y 8.<span class="exp">→ error, y nadie cambió (980 y 90)</span></li>
+        <li data-id="P3"><span class="id">P3</span>Crea un procedimiento <code>ascender(p_id int, p_rango text)</code> que cambie el rango y escriba <code>ASCENSO</code> en la bitácora.<span class="exp">→ rango cambiado + 1 evento</span></li>
+      </ul>
+    </section>
+
+    <section class="sheet" id="p4">
+      <div class="eyebrow">Tramo 4 de 7 · 20 min</div>
+      <h2>El conector seguro</h2>
+      <p>Un <b>conector</b> (o driver) es la librería que permite que un lenguaje hable con la base. En C# con PostgreSQL se llama <b>Npgsql</b>; con SQL Server es <code>Microsoft.Data.SqlClient</code>, en Java es JDBC y en Python, <code>psycopg</code>. Hay tres reglas para que el puente sea seguro:</p>
+      <div class="table-wrap"><table>
+        <tr><th>Regla</th><th>Mal</th><th>Bien</th></tr>
+        <tr><td><b>1. La clave no va en el código</b></td><td class="mono">Password=MiClave123 en Program.cs</td><td>En <code>.env</code> o variables de entorno; <code>.env</code> va en <code>.gitignore</code></td></tr>
+        <tr><td><b>2. Cifrado, no texto plano</b></td><td class="mono">SslMode=Disable</td><td><code>SslMode=Require</code> (o <code>VerifyFull</code>): TLS cifra todo lo que viaja</td></tr>
+        <tr><td><b>3. Parámetros, nunca texto pegado</b></td><td class="mono">$"... WHERE usuario = '{usuario}'"</td><td><code>WHERE usuario = @usuario</code> + <code>Parameters.AddWithValue</code></td></tr>
+      </table></div>
+      <pre data-lang="cs">var builder = new NpgsqlConnectionStringBuilder
+{
+    Host = Environment.GetEnvironmentVariable("DB_HOST"),
+    Username = Environment.GetEnvironmentVariable("DB_USER"),
+    Password = Environment.GetEnvironmentVariable("DB_PASSWORD"),   // sale de .env
+    Database = "postgres",
+    SslMode = SslMode.Require,                                     // conexión cifrada
+};
+await using var fuente = NpgsqlDataSource.Create(builder.ConnectionString);
+
+await using var cmd = fuente.CreateCommand(
+    "SELECT usuario, nivel FROM codigos_acceso WHERE usuario = @usuario AND clave = @clave");
+cmd.Parameters.AddWithValue("usuario", usuario);   // el dato viaja aparte del SQL
+cmd.Parameters.AddWithValue("clave", clave);</pre>
+
+      <div class="sim" id="sim">
+        <p class="sim-title">Simulador · ataque del Fantasma Inyector</p>
+        <p>Escribe un usuario y una clave para el login de <code>codigos_acceso</code>, o usa los ataques de ejemplo. Compara cómo se ve el SQL en cada versión.</p>
+        <div class="presets">
+          <button type="button" data-u="mateo" data-c="Cometa77">Login normal</button>
+          <button type="button" data-u="' OR '1'='1' --" data-c="nose">Ataque: OR 1=1</button>
+          <button type="button" data-u="x' UNION SELECT usuario, clave FROM codigos_acceso --" data-c="nose">Ataque: UNION</button>
+        </div>
+        <div class="sim-fields">
+          <label for="simU">Usuario<input type="text" id="simU" autocomplete="off" spellcheck="false"></label>
+          <label for="simC">Clave<input type="text" id="simC" autocomplete="off" spellcheck="false"></label>
+        </div>
+        <div class="sim-out">
+          <div class="panel bad"><h4>❌ SQL armado con texto</h4><div class="q" id="qBad"></div><div class="verdict" id="vBad"></div></div>
+          <div class="panel good"><h4>✅ Consulta parametrizada</h4><div class="q" id="qGood"></div><div class="verdict" id="vGood"></div></div>
+        </div>
+      </div>
+
+      <ul class="missions" data-step="p4">
+        <li data-id="C1"><span class="id">C1</span>Conecta tu <code>.env</code> a Supabase y corre la demo <code>1</code>.<span class="exp">→ 🔒 Conexión CIFRADA</span></li>
+        <li data-id="C2"><span class="id">C2</span>Corre la demo <code>2</code> y explica con tus palabras por qué <code>' OR '1'='1' --</code> entró sin clave.<span class="exp">→ el -- comenta el resto y '1'='1' siempre es verdad</span></li>
+        <li data-id="C3"><span class="id">C3</span>Con <code>DB_SSL=Disable</code>, corre la demo 1. Luego activa en Supabase <b>Database → Settings → SSL Configuration → Enforce SSL</b> y vuelve a probar.<span class="exp">→ antes texto plano, después la conexión es rechazada</span></li>
+        <li data-id="C4" class="boss"><span class="id">JEFE</span>Agrega a <code>TripulantesRepositorio</code> un método <code>BuscarPorNombre(string texto)</code> que use <code>ILIKE</code> con parámetros. Pruébalo con el ataque UNION: no debe salir ninguna clave.<span class="exp">→ 0 filas con el ataque</span></li>
+      </ul>
+    </section>
+
+    <section class="sheet" id="p5">
+      <div class="eyebrow">Tramo 5 de 7 · 15 min</div>
+      <h2>CRUD dentro del código</h2>
+      <p>El mismo CRUD del tramo 2, ahora desde C#. Cada letra es un método que envía SQL con parámetros. Este patrón (una clase "repositorio" por tabla) es el que vas a ver en casi cualquier empresa.</p>
+      <pre data-lang="cs">class TripulantesRepositorio(NpgsqlDataSource fuente)
+{
+    public async Task&lt;int&gt; Crear(string nombre, string email, int escuadronId)
+    {
+        await using var cmd = fuente.CreateCommand(
+            "INSERT INTO tripulantes (nombre, email, escuadron_id) " +
+            "VALUES (@nombre, @email, @escuadron) RETURNING id");
+        cmd.Parameters.AddWithValue("nombre", nombre);
+        cmd.Parameters.AddWithValue("email", email);
+        cmd.Parameters.AddWithValue("escuadron", escuadronId);
+        return (int)(await cmd.ExecuteScalarAsync())!;     // C: devuelve el id
+    }
+
+    public async Task&lt;int&gt; Eliminar(int id)
+    {
+        await using var cmd = fuente.CreateCommand("DELETE FROM tripulantes WHERE id = @id");
+        cmd.Parameters.AddWithValue("id", id);
+        return await cmd.ExecuteNonQueryAsync();            // D: filas borradas
+    }
+    // Listar() y BuscarPorId() usan ExecuteReaderAsync; SumarPuntos() es un UPDATE
+}</pre>
+      <div class="table-wrap"><table>
+        <tr><th>Método de Npgsql</th><th>Para qué</th><th>Devuelve</th></tr>
+        <tr><td class="mono">ExecuteReaderAsync</td><td>SELECT con varias filas</td><td>Un lector que recorres fila por fila</td></tr>
+        <tr><td class="mono">ExecuteScalarAsync</td><td>Un solo valor (un id, un COUNT)</td><td>Ese valor</td></tr>
+        <tr><td class="mono">ExecuteNonQueryAsync</td><td>INSERT, UPDATE, DELETE, CALL</td><td>Cuántas filas cambiaron</td></tr>
+      </table></div>
+      <ul class="missions" data-step="p5">
+        <li data-id="K1"><span class="id">K1</span>Crea <code>MisionesRepositorio</code> con <code>Crear</code>, <code>Listar</code> y <code>Eliminar</code>, y úsalo desde <code>Program.cs</code>.<span class="exp">→ funciona</span></li>
+        <li data-id="K2"><span class="id">K2</span>Haz que <code>Crear</code> devuelva el id usando <code>RETURNING id</code>.<span class="exp">→ id mayor que 0</span></li>
+        <li data-id="K3"><span class="id">K3</span>Intenta crear una misión con dificultad 9. Atrapa la <code>PostgresException</code> y muestra un mensaje amable.<span class="exp">→ mensaje propio, sin que el programa se caiga</span></li>
+      </ul>
+    </section>
+
+    <section class="sheet" id="p6">
+      <div class="eyebrow">Tramo 6 de 7 · 15 min</div>
+      <h2>LINQ</h2>
+      <p class="note"><b>LINQ es de C#, no de la base de datos.</b> Sirve para consultar cualquier colección: listas, arreglos y, con <b>Entity Framework Core</b>, tablas. EF traduce tu LINQ a SQL y lo envía con parámetros, así que también te protege de la inyección.</p>
+      <pre data-lang="cs">// LINQ sobre una lista normal, sin base de datos
+int[] puntos = [980, 120, 650, 90, 720];
+var altos = puntos.Where(p => p > 500).OrderBy(p => p);     // 650, 720, 980
+
+// LINQ sobre la base con Entity Framework
+var pilotos = db.Tripulantes
+    .Where(t => t.Rango == "Piloto")
+    .OrderByDescending(t => t.Puntos)
+    .Select(t => new { t.Nombre, t.Puntos });
+
+Console.WriteLine(pilotos.ToQueryString());   // muestra el SQL que se enviará:
+// SELECT t.nombre, t.puntos FROM tripulantes AS t
+// WHERE t.rango = 'Piloto' ORDER BY t.puntos DESC
+
+// CRUD sin escribir SQL
+db.Tripulantes.Add(new TripulanteEf { Nombre = "Alejo", Email = "a@x.net" });
+await db.SaveChangesAsync();                  // INSERT</pre>
+      <div class="table-wrap"><table>
+        <tr><th>LINQ (C#)</th><th>SQL</th></tr>
+        <tr><td class="mono">Where</td><td class="mono">WHERE</td></tr>
+        <tr><td class="mono">OrderBy / OrderByDescending</td><td class="mono">ORDER BY … / ORDER BY … DESC</td></tr>
+        <tr><td class="mono">Select</td><td class="mono">SELECT columnas</td></tr>
+        <tr><td class="mono">GroupBy</td><td class="mono">GROUP BY</td></tr>
+        <tr><td class="mono">Include</td><td class="mono">JOIN</td></tr>
+        <tr><td class="mono">Count() · Sum() · Average()</td><td class="mono">COUNT · SUM · AVG</td></tr>
+        <tr><td class="mono">Add + SaveChanges()</td><td class="mono">INSERT</td></tr>
+      </table></div>
+      <ul class="missions" data-step="p6">
+        <li data-id="L1"><span class="id">L1</span>Con LINQ, busca los tripulantes con rango Recluta y menos de 200 puntos.<span class="exp">→ base recién reseteada: 2 (Mariana y Daniel)</span></li>
+        <li data-id="L2"><span class="id">L2</span>Calcula el promedio de puntos por rango con <code>GroupBy</code> y <code>Average</code>.<span class="exp">→ 4 grupos</span></li>
+        <li data-id="L3"><span class="id">L3</span>Imprime el <code>ToQueryString()</code> de L1 y compáralo con el SQL que tú escribirías.<span class="exp">→ casi idénticos</span></li>
+      </ul>
+    </section>
+
+    <section class="sheet" id="p7">
+      <div class="eyebrow">Tramo 7 de 7 · 10 min</div>
+      <h2>Scrum y Kanban</h2>
+      <p>Son maneras de organizar el trabajo de un equipo. En una pasantía lo más probable es que entres a un equipo con <b>Scrum</b> y un tablero en Jira, Azure DevOps o GitHub Projects.</p>
+      <div class="table-wrap"><table>
+        <tr><th></th><th>Scrum</th><th>Kanban</th></tr>
+        <tr><td><b>Ritmo</b></td><td>Sprints fijos de 1 a 4 semanas</td><td>Flujo continuo</td></tr>
+        <tr><td><b>Roles</b></td><td>Product Owner, Scrum Master, equipo</td><td>No obligatorios</td></tr>
+        <tr><td><b>Reuniones</b></td><td>Planning, Daily de 15 min, Review, Retrospectiva</td><td>Las que el equipo necesite</td></tr>
+        <tr><td><b>Regla clave</b></td><td>El objetivo del sprint no cambia a mitad</td><td>Límite de trabajo en curso (WIP)</td></tr>
+        <tr><td><b>Ideal para</b></td><td>Producto nuevo con entregas frecuentes</td><td>Soporte, mantenimiento, tickets</td></tr>
+      </table></div>
+      <p>En la <b>Daily</b> cada persona responde tres cosas: qué hizo ayer, qué hará hoy y qué la está bloqueando.</p>
+      <h3>Prueba el tablero: toca una tarjeta para moverla. Límite WIP en "Haciendo": 2</h3>
+      <div class="board" id="board">
+        <div class="col" data-col="0"><h4>Por hacer <span></span></h4></div>
+        <div class="col" data-col="1"><h4>Haciendo <span></span></h4></div>
+        <div class="col" data-col="2"><h4>Hecho <span></span></h4></div>
+      </div>
+      <ul class="missions" data-step="p7">
+        <li data-id="S1"><span class="id">S1</span>Arma un tablero Kanban real (GitHub Projects o Trello) con las tareas K1 a K3.<span class="exp">→ 3 columnas, WIP ≤ 2</span></li>
+        <li data-id="S2"><span class="id">S2</span>Escribe 2 historias de usuario: "Como ___ quiero ___ para ___", cada una con sus criterios de aceptación.<span class="exp">→ 2 historias</span></li>
+      </ul>
+    </section>
+
+    <section class="sheet" id="entrevista">
+      <div class="eyebrow">Para la pasantía</div>
+      <h2>Lo que te pueden preguntar</h2>
+      <p>Si puedes responder esto con tus palabras y un ejemplo, tienes las bases que suelen pedir.</p>
+      <ol class="qs">
+        <li>¿Qué diferencia hay entre una base de datos relacional y una no relacional? Da un ejemplo de cada una.</li>
+        <li>¿Qué es una llave primaria y qué es una llave foránea?</li>
+        <li>¿Qué hace un <code>JOIN</code>? ¿Qué diferencia hay entre <code>INNER JOIN</code> y <code>LEFT JOIN</code>?</li>
+        <li>¿Qué es SQL injection y cómo la evitas?</li>
+        <li>¿Dónde guardas la contraseña de la base de datos en un proyecto?</li>
+        <li>¿Qué diferencia hay entre un procedimiento almacenado y una función?</li>
+        <li>¿Qué significa que una transacción sea atómica (la A de ACID)?</li>
+        <li>¿Qué es un ORM? ¿Qué ganas y qué pierdes con Entity Framework frente a escribir SQL a mano?</li>
+        <li>¿Qué es un sprint? ¿Qué se dice en una daily?</li>
+        <li>¿Scrum o Kanban para un equipo de soporte? ¿Por qué?</li>
+      </ol>
+    </section>
+
+    <section class="sheet" id="plan">
+      <div class="eyebrow">Después de la clase · 4 semanas · ~1 h al día</div>
+      <h2>Plan de estudio</h2>
+      <div class="table-wrap"><table>
+        <tr><th>Semana</th><th>Enfoque</th><th>Meta concreta</th></tr>
+        <tr><td class="mono">1</td><td>SQL</td><td>Terminar los tramos 1 a 3 y 20 ejercicios en <a href="https://sqlbolt.com" target="_blank" rel="noopener">sqlbolt.com</a></td></tr>
+        <tr><td class="mono">2</td><td>C# + conector</td><td>Tramos 4 y 5: tu propio CRUD de una tabla nueva, por ejemplo <code>tareas</code></td></tr>
+        <tr><td class="mono">3</td><td>LINQ + EF Core</td><td>Tramo 6 y rehacer el CRUD de la semana 2 con Entity Framework</td></tr>
+        <tr><td class="mono">4</td><td>Proyecto</td><td>Mini app "gestor de tareas" en GitHub, con tablero Kanban y README. Ese proyecto va a tu hoja de vida y a LinkedIn.</td></tr>
+      </table></div>
+      <div><button class="btn" type="button" id="reset">Borrar mi progreso</button> <span id="resetMsg" class="mono" aria-live="polite"></span></div>
+    </section>
+
+    <footer>Discamus Academy · Plano DA-07 · El progreso se guarda solo en este navegador.</footer>
+  </main>
+</div>
+
+<script type="text/plain" id="seed">-- =====================================================================
+-- Discamus Academy · Operación Puente Cuántico
+-- Base de datos inicial (PostgreSQL / Supabase)
+-- Se puede re-ejecutar: borra todo y lo deja como nuevo.
+-- =====================================================================
+
+DROP TABLE IF EXISTS bitacora, asignaciones, reportes_nave, codigos_acceso, misiones, tripulantes, escuadrones CASCADE;
+DROP PROCEDURE IF EXISTS registrar_tripulante(text, text, int);
+DROP PROCEDURE IF EXISTS transferir_puntos(int, int, int);
+DROP FUNCTION IF EXISTS ranking_escuadron(int);
+
+-- ---------------------------------------------------------------------
+-- 1. Tablas RELACIONALES: filas y columnas fijas, unidas por llaves
+-- ---------------------------------------------------------------------
+CREATE TABLE escuadrones (
+  id      int  GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  nombre  text NOT NULL UNIQUE,
+  color   text NOT NULL
+);
+
+CREATE TABLE tripulantes (
+  id            int         GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  nombre        text        NOT NULL,
+  email         text        NOT NULL UNIQUE,
+  rango         text        NOT NULL DEFAULT 'Recluta'
+                            CHECK (rango IN ('Recluta', 'Piloto', 'Ingeniero', 'Capitán')),
+  puntos        int         NOT NULL DEFAULT 0 CHECK (puntos >= 0),
+  escuadron_id  int         REFERENCES escuadrones(id),
+  activo        boolean     NOT NULL DEFAULT true,
+  creado_en     timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE TABLE misiones (
+  id          int  GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  nombre      text NOT NULL,
+  destino     text NOT NULL,
+  dificultad  int  NOT NULL CHECK (dificultad BETWEEN 1 AND 5)
+);
+
+-- Tabla puente: relación muchos a muchos tripulantes <-> misiones
+CREATE TABLE asignaciones (
+  tripulante_id int  REFERENCES tripulantes(id) ON DELETE CASCADE,
+  mision_id     int  REFERENCES misiones(id) ON DELETE CASCADE,
+  rol           text NOT NULL,
+  PRIMARY KEY (tripulante_id, mision_id)
+);
+
+-- Tabla "secreta" que el Fantasma Inyector quiere robar
+CREATE TABLE codigos_acceso (
+  id        int  GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  usuario   text NOT NULL UNIQUE,
+  clave     text NOT NULL,          -- en la vida real: NUNCA en texto plano, siempre un hash (bcrypt/argon2)
+  nivel     text NOT NULL
+);
+
+-- Bitácora que llenan los procedimientos
+CREATE TABLE bitacora (
+  id      int         GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  evento  text        NOT NULL,
+  detalle text,
+  fecha   timestamptz NOT NULL DEFAULT now()
+);
+
+-- ---------------------------------------------------------------------
+-- 2. Tabla estilo NO RELACIONAL: un documento JSON por fila (como MongoDB)
+--    Cada reporte puede traer campos distintos, sin esquema fijo.
+-- ---------------------------------------------------------------------
+CREATE TABLE reportes_nave (
+  id         int         GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  documento  jsonb       NOT NULL,
+  fecha      timestamptz NOT NULL DEFAULT now()
+);
+
+-- ---------------------------------------------------------------------
+-- 3. Datos iniciales
+-- ---------------------------------------------------------------------
+INSERT INTO escuadrones (nombre, color) VALUES
+  ('Orión',     'azul'),
+  ('Andrómeda', 'violeta'),
+  ('Fénix',     'naranja');
+
+INSERT INTO tripulantes (nombre, email, rango, puntos, escuadron_id) VALUES
+  ('Valentina Ríos',  'valentina@discamus.net', 'Capitán',   980, 1),
+  ('Mateo Cárdenas',  'mateo@discamus.net',     'Piloto',    720, 1),
+  ('Sofía Herrera',   'sofia@discamus.net',     'Ingeniero', 650, 2),
+  ('Samuel Ortiz',    'samuel@discamus.net',    'Piloto',    540, 3),
+  ('Isabella Mora',   'isabella@discamus.net',  'Recluta',   310, 2),
+  ('Tomás Vargas',    'tomas@discamus.net',     'Ingeniero', 480, 3),
+  ('Mariana López',   'mariana@discamus.net',   'Recluta',   120, 1),
+  ('Daniel Pineda',   'daniel@discamus.net',    'Recluta',    90, 3);
+
+INSERT INTO misiones (nombre, destino, dificultad) VALUES
+  ('Puente Cuántico',   'Estación Kepler',  4),
+  ('Lluvia de Cometas', 'Cinturón de Kuiper', 3),
+  ('Eco Lunar',         'Luna',             1),
+  ('Sombra de Titán',   'Titán',            5);
+
+INSERT INTO asignaciones (tripulante_id, mision_id, rol) VALUES
+  (1, 1, 'Comandante'), (2, 1, 'Piloto'), (3, 1, 'Ingeniera'),
+  (4, 2, 'Piloto'),     (6, 2, 'Ingeniero'),
+  (5, 3, 'Navegante'),  (7, 3, 'Apoyo'),
+  (1, 4, 'Comandante'), (2, 4, 'Piloto');
+
+INSERT INTO codigos_acceso (usuario, clave, nivel) VALUES
+  ('valentina', 'Orion#2126', 'comando'),
+  ('mateo',     'Cometa77',   'piloto'),
+  ('sofia',     'Reactor!9',  'ingenieria');
+
+INSERT INTO reportes_nave (documento) VALUES
+  ('{"nave": "Discamus I", "combustible": 82, "alertas": []}'),
+  ('{"nave": "Discamus II", "combustible": 15, "alertas": ["motor 2", "oxígeno bajo"], "capitan": "Valentina"}'),
+  ('{"nave": "Fénix", "sensores": {"temperatura": -40, "radiacion": "alta"}}');
+
+-- ---------------------------------------------------------------------
+-- 4. Procedimientos y funciones
+-- ---------------------------------------------------------------------
+
+-- PROCEDURE: hace algo (no devuelve tabla). Se llama con CALL.
+CREATE PROCEDURE registrar_tripulante(p_nombre text, p_email text, p_escuadron int)
+LANGUAGE plpgsql AS $$
+BEGIN
+  INSERT INTO tripulantes (nombre, email, escuadron_id)
+  VALUES (p_nombre, lower(p_email), p_escuadron);
+
+  INSERT INTO bitacora (evento, detalle)
+  VALUES ('ALTA', p_nombre || ' se unió a la tripulación');
+END;
+$$;
+
+-- PROCEDURE con validación: o se hace todo, o no se hace nada.
+CREATE PROCEDURE transferir_puntos(p_origen int, p_destino int, p_cantidad int)
+LANGUAGE plpgsql AS $$
+BEGIN
+  IF p_cantidad <= 0 THEN
+    RAISE EXCEPTION 'La cantidad debe ser positiva';
+  END IF;
+
+  UPDATE tripulantes SET puntos = puntos + p_cantidad WHERE id = p_destino;
+
+  -- El destino YA recibió los puntos... pero si el origen no tiene suficientes,
+  -- el error deshace TODO el procedimiento (atomicidad): nadie gana puntos de la nada.
+  IF (SELECT puntos FROM tripulantes WHERE id = p_origen) < p_cantidad THEN
+    RAISE EXCEPTION 'Puntos insuficientes: el tripulante % no tiene % puntos', p_origen, p_cantidad;
+  END IF;
+
+  UPDATE tripulantes SET puntos = puntos - p_cantidad WHERE id = p_origen;
+
+  INSERT INTO bitacora (evento, detalle)
+  VALUES ('TRANSFERENCIA', p_cantidad || ' puntos de ' || p_origen || ' a ' || p_destino);
+END;
+$$;
+
+-- FUNCTION: devuelve un resultado. Se usa dentro de un SELECT.
+CREATE FUNCTION ranking_escuadron(p_escuadron int)
+RETURNS TABLE (puesto bigint, nombre text, rango text, puntos int)
+LANGUAGE sql AS $$
+  SELECT row_number() OVER (ORDER BY t.puntos DESC), t.nombre, t.rango, t.puntos
+  FROM tripulantes t
+  WHERE t.escuadron_id = p_escuadron AND t.activo
+  ORDER BY t.puntos DESC;
+$$;
+
+-- Comprobación rápida: debe mostrar 8 tripulantes
+SELECT id, nombre, rango, puntos FROM tripulantes ORDER BY id;
+</script>
+<script>
+(() => {
+  const KEY = 'puente-cuantico-v1';
+  const load = () => { try { return new Set(JSON.parse(localStorage.getItem(KEY) || '[]')); } catch { return new Set(); } };
+  const save = s => { try { localStorage.setItem(KEY, JSON.stringify([...s])); } catch {} };
+  const esc = s => s.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+  // Resaltado mínimo de SQL / C#
+  const KW = {
+    sql: 'SELECT|FROM|WHERE|JOIN|ON|AS|INSERT|INTO|VALUES|UPDATE|SET|DELETE|CREATE|TABLE|PROCEDURE|FUNCTION|RETURNS|RETURNING|LANGUAGE|BEGIN|END|IF|THEN|RAISE|EXCEPTION|CALL|ORDER|BY|DESC|AND|OR|NOT|NULL|DEFAULT|PRIMARY|KEY|REFERENCES|UNIQUE|CHECK|CONFLICT|DO|NOTHING|DROP|EXISTS|CASCADE|GENERATED|ALWAYS|IDENTITY|INT|TEXT|BOOLEAN|TIMESTAMPTZ|JSONB|BETWEEN|IN|OVER|GROUP|LIMIT|INTEGER|SQL|PLPGSQL|EXCLUDED|FOUND|ROW_NUMBER',
+    cs: 'var|new|await|using|async|return|class|record|public|static|string|int|bool|if|else|foreach|in|try|catch|throw|null|true|false|Task|void|const'
+  };
+  function highlight(code, lang) {
+    if (!KW[lang]) return esc(code);
+    const kw = lang === 'sql' ? `\\b(?:${KW.sql})\\b` : `\\b(?:${KW.cs})\\b`;
+    const com = lang === 'sql' ? '--[^\\n]*' : '//[^\\n]*';
+    const str = lang === 'sql' ? "'(?:[^']|'')*'" : '\\$?"(?:[^"\\\\]|\\\\.)*"';
+    const re = new RegExp(`(${com})|(${str})|(${kw})`, lang === 'sql' ? 'gi' : 'g');
+    let out = '', last = 0, m;
+    while ((m = re.exec(code))) {
+      out += esc(code.slice(last, m.index));
+      const cls = m[1] ? 'c' : m[2] ? 's' : 'k';
+      out += `<span class="${cls}">${esc(m[0])}</span>`;
+      last = re.lastIndex;
+    }
+    return out + esc(code.slice(last));
+  }
+
+  const seedPre = document.getElementById('seedPre');
+  seedPre.textContent = document.getElementById('seed').textContent.trim();
+  document.querySelectorAll('pre[data-lang]').forEach(pre => {
+    const raw = pre.textContent;
+    pre.innerHTML = highlight(raw, pre.dataset.lang);
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'copy'; b.textContent = 'Copiar';
+    b.addEventListener('click', () => {
+      const ok = () => { b.textContent = 'Copiado'; setTimeout(() => b.textContent = 'Copiar', 1600); };
+      const fallback = () => { const r = document.createRange(); r.selectNodeContents(pre); const s = getSelection(); s.removeAllRanges(); s.addRange(r); b.textContent = 'Selecciona y copia'; };
+      try { navigator.clipboard.writeText(raw).then(ok, fallback); } catch { fallback(); }
+    });
+    pre.appendChild(b);
+  });
+
+  // Misiones y rango
+  const done = load();
+  const items = [...document.querySelectorAll('.missions li')];
+  items.forEach(li => {
+    const id = li.dataset.id, inputId = 'm-' + id;
+    const box = document.createElement('input');
+    box.type = 'checkbox'; box.id = inputId; box.checked = done.has(id);
+    const label = document.createElement('label');
+    label.htmlFor = inputId;
+    const exp = li.querySelector('.exp');
+    [...li.childNodes].filter(n => n !== exp).forEach(n => label.appendChild(n));
+    li.prepend(box, label);
+    if (exp) li.appendChild(exp);
+    box.addEventListener('change', () => { box.checked ? done.add(id) : done.delete(id); save(done); render(); });
+  });
+  const RANKS = [[0, 'Recluta'], [.25, 'Piloto'], [.5, 'Ingeniero'], [.8, 'Capitán'], [1, 'Arquitecto del Puente']];
+  function render() {
+    const total = items.length, n = items.filter(li => done.has(li.dataset.id)).length, pct = n / total;
+    items.forEach(li => li.classList.toggle('checked', done.has(li.dataset.id)));
+    const rank = RANKS.filter(([min]) => pct >= min).pop()[1];
+    document.getElementById('rank').firstChild.textContent = rank;
+    document.getElementById('rankSub').textContent = `${n} de ${total} misiones`;
+    document.getElementById('meter').style.width = (pct * 100) + '%';
+    let currentSet = false;
+    document.querySelectorAll('#route a').forEach(a => {
+      const ms = items.filter(li => li.closest('.missions').dataset.step === a.dataset.step);
+      const complete = ms.length && ms.every(li => done.has(li.dataset.id));
+      a.classList.toggle('done', complete);
+      a.classList.toggle('current', !complete && !currentSet);
+      if (!complete && !currentSet) currentSet = true;
+    });
+  }
+  render();
+  document.getElementById('reset').addEventListener('click', e => {
+    const btn = e.currentTarget;
+    if (btn.dataset.armed !== '1') { btn.dataset.armed = '1'; btn.textContent = 'Toca otra vez para confirmar'; return; }
+    done.clear(); save(done);
+    items.forEach(li => li.querySelector('input').checked = false);
+    btn.dataset.armed = ''; btn.textContent = 'Borrar mi progreso';
+    document.getElementById('resetMsg').textContent = 'Progreso borrado';
+    render();
+  });
+
+  // Simulador de inyección (imita la tabla codigos_acceso del script inicial)
+  const USERS = [['valentina', 'Orion#2126', 'comando'], ['mateo', 'Cometa77', 'piloto'], ['sofia', 'Reactor!9', 'ingenieria']];
+  const u = document.getElementById('simU'), c = document.getElementById('simC');
+  function sim() {
+    const user = u.value, pass = c.value;
+    const sqlBad = `SELECT usuario, nivel FROM codigos_acceso\nWHERE usuario = '${user}' AND clave = '${pass}'`;
+    // Resalta lo que el atacante logró meter como código: todo lo que escapa de las comillas
+    const mark = s => { const i = s.indexOf("'"); return i < 0 ? esc(s) : esc(s.slice(0, i)) + '<mark>' + esc(s.slice(i)) + '</mark>'; };
+    document.getElementById('qBad').innerHTML =
+      `SELECT usuario, nivel FROM codigos_acceso\nWHERE usuario = '${mark(user)}' AND clave = '${mark(pass)}'`;
+    document.getElementById('qGood').innerHTML =
+      `SELECT usuario, nivel FROM codigos_acceso\nWHERE usuario = @usuario AND clave = @clave\n\n<span class="p">@usuario = ${esc(JSON.stringify(user))}\n@clave   = ${esc(JSON.stringify(pass))}</span>`;
+
+    const vBad = document.getElementById('vBad'), vGood = document.getElementById('vGood');
+    const legit = USERS.find(r => r[0] === user && r[1] === pass);
+    const low = sqlBad.toLowerCase();
+    let bad;
+    if (/union\s+select\s+usuario\s*,\s*clave\s+from\s+codigos_acceso/.test(low))
+      bad = { cls: 'bad', html: '¡Claves robadas! El UNION pegó la tabla secreta al resultado:<ul>' + USERS.map(r => `<li>${esc(r[0])} → ${esc(r[1])}</li>`).join('') + '</ul>' };
+    else if (/'\s*or\s*'?(\w)'?\s*=\s*'?\1'?/.test(low) || /'\s*or\s+1\s*=\s*1/.test(low))
+      bad = { cls: 'bad', html: 'Entró sin clave. La condición siempre es verdadera y devuelve a todos:<ul>' + USERS.map(r => `<li>${esc(r[0])} (${esc(r[2])})</li>`).join('') + '</ul>' };
+    else if (user.includes("'") || pass.includes("'"))
+      bad = { cls: 'bad', html: 'La comilla rompió el SQL: error de sintaxis. Un atacante usa estos errores para ir probando.' };
+    else bad = legit ? { cls: 'good', html: `Acceso concedido a ${esc(legit[0])} (${esc(legit[2])}).` } : { cls: 'good', html: 'Acceso denegado.' };
+    vBad.className = 'verdict ' + bad.cls; vBad.innerHTML = bad.html;
+    vGood.className = 'verdict good';
+    vGood.innerHTML = legit ? `Acceso concedido a ${esc(legit[0])} (${esc(legit[2])}).` : 'Acceso denegado. El texto se buscó tal cual como nombre de usuario; nunca se ejecutó como SQL.';
+  }
+  document.querySelectorAll('.presets button').forEach(b => b.addEventListener('click', () => { u.value = b.dataset.u; c.value = b.dataset.c; sim(); }));
+  u.addEventListener('input', sim); c.addEventListener('input', sim);
+  u.value = "' OR '1'='1' --"; c.value = 'nose'; sim();
+
+  // Tablero Kanban de práctica
+  const cards = [['K1 · MisionesRepositorio', 0], ['K2 · RETURNING id', 0], ['K3 · Manejo de errores', 0], ['Instalar .NET 8', 2], ['Conectar a Supabase', 1]];
+  const board = document.getElementById('board');
+  function drawBoard() {
+    board.querySelectorAll('.card').forEach(n => n.remove());
+    const cols = [...board.querySelectorAll('.col')];
+    cards.forEach((card, i) => {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'card'; b.textContent = card[0];
+      b.addEventListener('click', () => { card[1] = (card[1] + 1) % 3; drawBoard(); });
+      cols[card[1]].appendChild(b);
+    });
+    cols.forEach((col, i) => {
+      const n = cards.filter(cd => cd[1] === i).length;
+      const over = i === 1 && n > 2;
+      col.classList.toggle('over', over);
+      col.querySelector('h4 span').textContent = i === 1 ? `${n}/2${over ? ' · WIP excedido' : ''}` : n;
+    });
+  }
+  drawBoard();
+})();
+</script>
