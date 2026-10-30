@@ -1,8 +1,8 @@
-# 🚀 Discamus · Operación Puente Cuántico
+# 🎃 Discamus · Operación Puente Embrujado
 
 **Ruta de estudio: de cero a conectar C# con una base de datos (preparación para pasantía)**
 
-> La nave Discamus necesita conectar su software de control (C#) a la base de datos de la tripulación (PostgreSQL). Un saboteador, el **Fantasma Inyector**, intenta colarse por los conectores mal hechos. Tu misión: aprender a construir el puente… y blindarlo.
+> Es noche de Halloween. La nave Discamus necesita conectar su software de control (C#) a la base de datos de la tripulación (PostgreSQL). Entre las tablas ronda el **Fantasma Inyector** 👻, que intenta colarse por los conectores mal hechos. Tu misión: aprender a construir el puente… y blindarlo.
 
 ## 🧭 ¿Por dónde empiezo? El orden importa
 

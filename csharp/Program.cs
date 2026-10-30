@@ -1,11 +1,11 @@
-// Discamus Academy · Operación Puente Cuántico
+// Discamus Academy · Operación Puente Embrujado
 // Uso:  dotnet run -- 1     (o sin número para ver el menú)
 
 var opcion = args.FirstOrDefault();
 if (opcion is null)
 {
     Console.WriteLine("""
-        🚀 Operación Puente Cuántico
+        🎃 Operación Puente Embrujado
           1) Conectar (¿plano o cifrado?)
           2) SQL injection: inseguro vs parametrizado
           3) CRUD con Npgsql

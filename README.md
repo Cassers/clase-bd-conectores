@@ -1,6 +1,6 @@
-# Discamus · Operación Puente Cuántico
+# Discamus · Operación Puente Embrujado 🎃
 
-Ruta de estudio 1 a 1 (2 h) para Alejo, que se prepara para una pasantía: bases de datos → SQL/INSERT → procedimientos → conector C# seguro (Npgsql, TLS, parámetros) → CRUD en código → LINQ con EF Core → Scrum/Kanban.
+Ruta de estudio 1 a 1 (2 h) con temática de Halloween para Alejo, que se prepara para una pasantía: bases de datos → SQL/INSERT → procedimientos → conector C# seguro (Npgsql, TLS, parámetros) → CRUD en código → LINQ con EF Core → Scrum/Kanban.
 
 - Web (artifact privado: compartir desde el menú Share): https://claude.ai/artifact/Cxf5EteA9mqBnCyFUTK5e7
 - `01_base_puente.sql`: base inicial en PostgreSQL/Supabase; se puede volver a ejecutar para resetear

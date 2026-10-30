@@ -1,40 +1,34 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Operación Puente Cuántico</title>
+<title>Operación Puente Embrujado</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Creepster&family=Big+Shoulders+Display:wght@600;800&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;600&display=swap">
 <style>
-/* Layout: plano técnico (cianotipo) de un puente. Riel izquierdo fijo con la ruta de 7 tramos y el progreso; columna de contenido a la derecha. En móvil el riel pasa a una barra superior. */
+/* Layout: plano técnico embrujado (noche de Halloween). Riel izquierdo con la ruta de 7 tramos y el progreso; columna de contenido a la derecha. En móvil el riel pasa a barra superior. Un solo tema oscuro, a propósito. */
 :root {
-  --paper: #e9f0f6;
-  --sheet: #f6f9fc;
-  --ink: #0f2d4a;
-  --ink-soft: #4a6680;
-  --grid: #c9d8e6;
-  --rule: #a9bfd3;
-  --prussian: #1d4f80;
-  --signal: #c96a00;
-  --danger: #b4233a;
-  --safe: #1f7a52;
-  --code-bg: #0f2d4a;
-  --code-ink: #e3eef8;
-  --code-kw: #8cc8ff;
-  --code-str: #ffc477;
-  --code-com: #8aa4bb;
+  --paper: #150f24;
+  --sheet: #1d1632;
+  --ink: #f3ead9;
+  --ink-soft: #b4a7cc;
+  --grid: #221a3a;
+  --rule: #3c2f5f;
+  --pumpkin: #ff8a2a;
+  --signal: #ffcb47;
+  --danger: #ff5c7a;
+  --safe: #9be3a9;
+  --code-bg: #0d0918;
+  --code-ink: #efe6d6;
+  --code-kw: #ffa65c;
+  --code-str: #c9a6ff;
+  --code-com: #7d6f99;
+  --spooky: "Creepster", "Big Shoulders Display", Impact, sans-serif;
   --display: "Big Shoulders Display", "Arial Narrow", Impact, sans-serif;
   --body: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif;
   --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  color-scheme: dark;
 }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
-  --paper: #0b1d30; --sheet: #10263d; --ink: #dce9f5; --ink-soft: #93adc6; --grid: #183553; --rule: #285077;
-  --prussian: #7fb8f0; --signal: #ffad4a; --danger: #ff7088; --safe: #5fd6a0;
-  --code-bg: #071524; --code-ink: #dce9f5; --code-kw: #8cc8ff; --code-str: #ffc477; --code-com: #6f8ba5; color-scheme: dark; } }
-:root[data-theme="dark"] {
-  --paper: #0b1d30; --sheet: #10263d; --ink: #dce9f5; --ink-soft: #93adc6; --grid: #183553; --rule: #285077;
-  --prussian: #7fb8f0; --signal: #ffad4a; --danger: #ff7088; --safe: #5fd6a0;
-  --code-bg: #071524; --code-ink: #dce9f5; --code-kw: #8cc8ff; --code-str: #ffc477; --code-com: #6f8ba5; color-scheme: dark; }
 
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; scroll-padding-top: 80px; }
@@ -43,7 +37,7 @@ body { margin: 0; color: var(--ink); font: 17px/1.62 var(--body);
   background: var(--paper);
   background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
   background-size: 28px 28px; background-attachment: fixed; }
-a { color: var(--prussian); }
+a { color: var(--pumpkin); }
 :focus-visible { outline: 2px solid var(--signal); outline-offset: 2px; }
 
 .shell { display: grid; grid-template-columns: minmax(0, 1fr); max-width: 1180px; margin: 0 auto;
@@ -55,17 +49,17 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 .rail { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--paper); border-bottom: 1px solid var(--rule);
   margin-inline: calc(-1 * max(16px, env(safe-area-inset-left, 0px))); padding: 10px max(16px, env(safe-area-inset-left, 0px)); }
 .rail-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.rank { font: 800 20px/1 var(--display); letter-spacing: .04em; text-transform: uppercase; color: var(--prussian); }
+.rank { font: 800 20px/1 var(--display); letter-spacing: .04em; text-transform: uppercase; color: var(--pumpkin); }
 .rank small { display: block; font: 400 12px/1.3 var(--body); letter-spacing: 0; text-transform: none; color: var(--ink-soft); margin-top: 3px; }
 .meter { flex: 1; max-width: 220px; height: 8px; border: 1px solid var(--rule); border-radius: 4px; background: var(--sheet); overflow: hidden; }
-.meter i { display: block; height: 100%; width: 0; background: var(--prussian); transition: width .5s ease; }
+.meter i { display: block; height: 100%; width: 0; background: var(--pumpkin); transition: width .5s ease; }
 .route { display: flex; gap: 6px; list-style: none; margin: 10px 0 0; padding: 0; overflow-x: auto; scrollbar-width: none; }
 .route::-webkit-scrollbar { display: none; }
 .route a { display: flex; align-items: center; gap: 8px; text-decoration: none; color: var(--ink-soft); white-space: nowrap;
   font: 600 13px/1 var(--body); padding: 7px 10px; border: 1px solid var(--rule); border-radius: 4px; background: var(--sheet); }
 .route a .n { font: 600 11px/1 var(--mono); }
 .route a.done { color: var(--safe); border-color: var(--safe); }
-.route a.current { color: var(--ink); border-color: var(--prussian); }
+.route a.current { color: var(--ink); border-color: var(--pumpkin); }
 @media (min-width: 960px) {
   .rail { top: 0; height: 100vh; margin: 0; padding: 40px 0; border: 0; background: transparent; display: flex; flex-direction: column; gap: 24px; }
   .rail-head { flex-direction: column; align-items: stretch; }
@@ -76,7 +70,7 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
   .route a .n { width: 24px; height: 24px; flex: none; display: grid; place-items: center; border-radius: 50%;
     border: 2px solid var(--rule); background: var(--paper); color: var(--ink-soft); z-index: 1; }
   .route a.done .n { background: var(--safe); border-color: var(--safe); color: var(--paper); }
-  .route a.current .n { border-color: var(--prussian); color: var(--prussian); }
+  .route a.current .n { border-color: var(--pumpkin); color: var(--pumpkin); }
 }
 
 main { min-width: 0; padding-block: 32px 96px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 40px; }
@@ -85,32 +79,47 @@ main { min-width: 0; padding-block: 32px 96px; display: grid; grid-template-colu
 .hero { display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; padding-top: 8px; }
 .stamp { font: 600 12px/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--ink-soft);
   display: flex; flex-wrap: wrap; gap: 6px 16px; }
-h1 { font: 800 clamp(48px, 9vw, 92px)/.9 var(--display); margin: 0; text-transform: uppercase; letter-spacing: .01em; text-wrap: balance; color: var(--ink); }
-h1 span { color: var(--prussian); }
+h1 { font: 400 clamp(52px, 10vw, 104px)/.92 var(--spooky); margin: 0; letter-spacing: .02em; text-wrap: balance; color: var(--ink); }
+h1 span { color: var(--pumpkin); text-shadow: 0 0 28px color-mix(in srgb, var(--pumpkin) 45%, transparent); }
 .lede { max-width: 60ch; margin: 0; font-size: 19px; color: var(--ink-soft); }
 .lede b { color: var(--ink); }
 
+/* Decoración de Halloween */
+.hero { position: relative; }
+.ghost { position: absolute; right: 2%; top: 0; width: 84px; height: 104px; pointer-events: none; animation: haunt 5s ease-in-out infinite; opacity: .92; }
+.ghost svg { width: 100%; height: 100%; }
+@keyframes haunt { 0%, 100% { transform: translateY(0) rotate(-4deg); } 50% { transform: translateY(-14px) rotate(4deg); } }
+.bats { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+.bat { position: absolute; width: 38px; color: var(--ink-soft); opacity: .5; animation: fly linear infinite; }
+.bat svg { width: 100%; display: block; animation: flap .35s ease-in-out infinite alternate; }
+@keyframes fly { from { transform: translateX(-60px); } to { transform: translateX(calc(100vw + 60px)); } }
+@keyframes flap { from { transform: scaleY(1); } to { transform: scaleY(.45); } }
+.shell { position: relative; z-index: 1; }
+.route a.done .n { font-size: 0; }
+.route a.done .n::after { content: "🎃"; font-size: 15px; line-height: 1; }
+@media (max-width: 700px) { .ghost { width: 56px; height: 70px; right: 0; top: -8px; } .stamp { padding-right: 64px; } }
+
 /* Plano del puente (SVG) */
-.blueprint { border: 1px solid var(--rule); background: var(--sheet); border-radius: 6px; padding: 16px; overflow-x: auto; }
+.blueprint { border: 1px solid var(--rule); background: radial-gradient(circle at 50% 120%, color-mix(in srgb, var(--pumpkin) 14%, transparent), transparent 60%), var(--sheet); border-radius: 6px; padding: 16px; overflow-x: auto; }
 .blueprint svg { display: block; width: 100%; min-width: 620px; height: auto; }
 .blueprint .cap { font: 400 12px/1.4 var(--mono); color: var(--ink-soft); margin-top: 8px; }
 
 /* Secciones */
 .sheet { background: var(--sheet); border: 1px solid var(--rule); border-radius: 6px; padding: 28px clamp(18px, 4vw, 40px); display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; min-width: 0; }
 .sheet > * { min-width: 0; }
-.eyebrow { font: 600 12px/1 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--prussian); }
+.eyebrow { font: 600 12px/1 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--pumpkin); }
 h2 { font: 800 clamp(32px, 5vw, 44px)/1 var(--display); text-transform: uppercase; margin: 0; text-wrap: balance; }
 h3 { font: 700 18px/1.3 var(--body); margin: 8px 0 0; }
 p { margin: 0; max-width: 68ch; }
 .sheet ul:not(.missions) { margin: 0; padding-left: 20px; max-width: 68ch; display: grid; gap: 4px; }
 .note { border-left: 3px solid var(--signal); padding: 10px 14px; background: color-mix(in srgb, var(--signal) 9%, transparent); max-width: 68ch; }
 .note.danger { border-color: var(--danger); background: color-mix(in srgb, var(--danger) 8%, transparent); }
-code { font: 0.88em var(--mono); background: color-mix(in srgb, var(--prussian) 12%, transparent); padding: 1px 5px; border-radius: 3px; }
+code { font: 0.88em var(--mono); background: color-mix(in srgb, var(--pumpkin) 12%, transparent); padding: 1px 5px; border-radius: 3px; }
 
 .table-wrap { overflow-x: auto; border: 1px solid var(--rule); border-radius: 4px; }
 table { border-collapse: collapse; width: 100%; font-size: 15px; min-width: 460px; }
 th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--rule); vertical-align: top; }
-th { font: 600 12px/1.2 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--ink-soft); background: color-mix(in srgb, var(--prussian) 6%, transparent); }
+th { font: 600 12px/1.2 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--ink-soft); background: color-mix(in srgb, var(--pumpkin) 6%, transparent); }
 tr:last-child td { border-bottom: 0; }
 .mono { font-family: var(--mono); font-size: 14px; }
 
@@ -128,7 +137,7 @@ pre .k { color: var(--code-kw); font-weight: 600; } pre .s { color: var(--code-s
 .missions li.boss { border-color: var(--danger); }
 .missions input { width: 20px; height: 20px; margin: 3px 0 0; accent-color: var(--safe); cursor: pointer; }
 .missions label { cursor: pointer; }
-.missions .id { font: 600 12px/1 var(--mono); color: var(--prussian); margin-right: 6px; }
+.missions .id { font: 600 12px/1 var(--mono); color: var(--pumpkin); margin-right: 6px; }
 .missions li.boss .id { color: var(--danger); }
 .missions .exp { grid-column: 2; font: 13px/1.4 var(--mono); color: var(--ink-soft); }
 .missions li.checked { border-color: var(--safe); }
@@ -136,13 +145,13 @@ pre .k { color: var(--code-kw); font-weight: 600; } pre .s { color: var(--code-s
 
 /* Simulador de inyección */
 .sim { border: 2px solid var(--danger); border-radius: 6px; padding: 18px; display: grid; gap: 14px; background: var(--paper); }
-.sim-title { font: 800 24px/1 var(--display); text-transform: uppercase; color: var(--danger); margin: 0; }
+.sim-title { font: 400 30px/1 var(--spooky); letter-spacing: .03em; color: var(--danger); margin: 0; }
 .sim-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; }
 .sim label { font: 600 12px/1 var(--mono); text-transform: uppercase; letter-spacing: .08em; color: var(--ink-soft); display: grid; gap: 6px; }
 .sim input[type=text] { font: 15px var(--mono); padding: 10px 12px; border: 1px solid var(--rule); border-radius: 4px; background: var(--sheet); color: var(--ink); width: 100%; }
 .presets { display: flex; flex-wrap: wrap; gap: 8px; }
 .presets button, .btn { font: 600 13px/1 var(--body); padding: 9px 12px; border-radius: 4px; border: 1px solid var(--rule); background: var(--sheet); color: var(--ink); cursor: pointer; }
-.presets button:hover, .btn:hover { border-color: var(--prussian); }
+.presets button:hover, .btn:hover { border-color: var(--pumpkin); }
 .sim-out { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
 .panel { border: 1px solid var(--rule); border-radius: 4px; padding: 12px; display: grid; gap: 8px; align-content: start; min-width: 0; background: var(--sheet); }
 .panel h4 { margin: 0; font: 700 14px/1.2 var(--body); }
@@ -160,8 +169,8 @@ pre .k { color: var(--code-kw); font-weight: 600; } pre .s { color: var(--code-s
 .col { border: 1px dashed var(--rule); border-radius: 4px; padding: 10px; display: grid; gap: 8px; align-content: start; min-height: 120px; }
 .col h4 { margin: 0; font: 600 12px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-soft); display: flex; justify-content: space-between; }
 .col.over h4 { color: var(--danger); }
-.card { text-align: left; font: 14px/1.35 var(--body); padding: 10px; border: 1px solid var(--rule); border-left: 3px solid var(--prussian); border-radius: 3px; background: var(--sheet); color: var(--ink); cursor: pointer; }
-.card:hover { border-color: var(--prussian); }
+.card { text-align: left; font: 14px/1.35 var(--body); padding: 10px; border: 1px solid var(--rule); border-left: 3px solid var(--pumpkin); border-radius: 3px; background: var(--sheet); color: var(--ink); cursor: pointer; }
+.card:hover { border-color: var(--pumpkin); }
 .col[data-col="2"] .card { border-left-color: var(--safe); }
 
 .qs { margin: 0; padding-left: 22px; display: grid; gap: 8px; max-width: 68ch; }
@@ -170,10 +179,15 @@ summary { cursor: pointer; font-weight: 700; }
 footer { font: 13px/1.5 var(--mono); color: var(--ink-soft); }
 </style>
 
+<div class="bats" aria-hidden="true">
+  <div class="bat" style="top:14%;animation-duration:26s"><svg viewBox="0 0 40 16"><path d="M20 6c-2-4-6-6-10-5 2 1 2 3 1 4-3-1-7 0-10 3 4 0 6 2 7 4 2-2 6-3 8-2 1 2 3 3 4 3s3-1 4-3c2-1 6 0 8 2 1-2 3-4 7-4-3-3-7-4-10-3-1-1-1-3 1-4-4-1-8 1-10 5z" fill="currentColor"/></svg></div>
+  <div class="bat" style="top:38%;width:26px;animation-duration:34s;animation-delay:-12s"><svg viewBox="0 0 40 16"><path d="M20 6c-2-4-6-6-10-5 2 1 2 3 1 4-3-1-7 0-10 3 4 0 6 2 7 4 2-2 6-3 8-2 1 2 3 3 4 3s3-1 4-3c2-1 6 0 8 2 1-2 3-4 7-4-3-3-7-4-10-3-1-1-1-3 1-4-4-1-8 1-10 5z" fill="currentColor"/></svg></div>
+  <div class="bat" style="top:70%;width:30px;animation-duration:29s;animation-delay:-20s"><svg viewBox="0 0 40 16"><path d="M20 6c-2-4-6-6-10-5 2 1 2 3 1 4-3-1-7 0-10 3 4 0 6 2 7 4 2-2 6-3 8-2 1 2 3 3 4 3s3-1 4-3c2-1 6 0 8 2 1-2 3-4 7-4-3-3-7-4-10-3-1-1-1-3 1-4-4-1-8 1-10 5z" fill="currentColor"/></svg></div>
+</div>
 <div class="shell">
   <aside class="rail" aria-label="Ruta de estudio">
     <div class="rail-head">
-      <div class="rank" id="rank">Recluta<small id="rankSub">0 de 0 misiones</small></div>
+      <div class="rank" id="rank">Alma en pena<small id="rankSub">0 de 0 misiones</small></div>
       <div class="meter" aria-hidden="true"><i id="meter"></i></div>
     </div>
     <ol class="route" id="route">
@@ -189,12 +203,13 @@ footer { font: 13px/1.5 var(--mono); color: var(--ink-soft); }
 
   <main>
     <header class="hero">
-      <div class="stamp"><span>Discamus Academy</span><span>Plano DA-07 · Puente C# ↔ PostgreSQL</span><span>Ruta 1 a 1 · 2 h</span></div>
-      <h1>Operación <span>Puente Cuántico</span></h1>
-      <p class="lede">La nave necesita conectar su software de control, hecho en <b>C#</b>, con la base de datos de la tripulación, en <b>PostgreSQL</b>. El <b>Fantasma Inyector</b> busca colarse por cualquier conector mal hecho. Son 7 tramos en orden: cada uno se apoya en el anterior, así que no hay que estudiarlo todo a la vez. Marca cada misión al completarla y verás subir tu rango.</p>
+      <div class="ghost" aria-hidden="true"><svg viewBox="0 0 84 104"><path d="M42 4C20 4 8 22 8 44v54l10-8 8 8 8-8 8 8 8-8 8 8 8-8 10 8V44C76 22 64 4 42 4z" fill="var(--ink)"/><ellipse cx="31" cy="42" rx="6" ry="9" fill="var(--paper)"/><ellipse cx="53" cy="42" rx="6" ry="9" fill="var(--paper)"/><ellipse cx="42" cy="64" rx="7" ry="9" fill="var(--paper)"/></svg></div>
+      <div class="stamp"><span>Discamus Academy</span><span>Noche del 31 · Plano DA-31 · Puente C# ↔ PostgreSQL</span><span>Ruta 1 a 1 · 2 h</span></div>
+      <h1>Operación <span>Puente Embrujado</span></h1>
+      <p class="lede">Es noche de Halloween y la nave necesita conectar su software de control, hecho en <b>C#</b>, con la base de datos de la tripulación, en <b>PostgreSQL</b>. Pero entre las tablas ronda el <b>Fantasma Inyector</b>, que se cuela por cualquier conector mal hecho para robar las claves. Son 7 tramos en orden: cada uno se apoya en el anterior, así que no hay que estudiarlo todo a la vez. Marca cada misión al completarla: cada tramo terminado enciende una calabaza 🎃 y te sube de rango.</p>
       <div class="blueprint">
         <svg viewBox="0 0 760 210" role="img" aria-label="Diagrama: la app en C# usa un conector (Npgsql o Entity Framework con LINQ) que viaja cifrado hasta PostgreSQL, donde viven tablas, SQL y procedimientos">
-          <g fill="none" stroke="var(--prussian)" stroke-width="2">
+          <g fill="none" stroke="var(--pumpkin)" stroke-width="2">
             <rect x="10" y="60" width="170" height="100" rx="4" fill="var(--paper)"/>
             <rect x="580" y="60" width="170" height="100" rx="4" fill="var(--paper)"/>
             <path d="M180 110 Q 380 10 580 110"/>
@@ -208,12 +223,12 @@ footer { font: 13px/1.5 var(--mono); color: var(--ink-soft); }
             <text x="665" y="92" text-anchor="middle" font-weight="600">POSTGRESQL</text>
             <text x="665" y="114" text-anchor="middle" fill="var(--ink-soft)">Tramos 1, 2 y 3</text>
             <text x="665" y="134" text-anchor="middle" fill="var(--ink-soft)">tablas · SQL · CALL</text>
-            <text x="380" y="132" text-anchor="middle" font-weight="600" fill="var(--prussian)">TRAMO 4 · CONECTOR (Npgsql)</text>
+            <text x="380" y="132" text-anchor="middle" font-weight="600" fill="var(--pumpkin)">TRAMO 4 · CONECTOR (Npgsql)</text>
             <text x="380" y="152" text-anchor="middle" fill="var(--safe)">TLS cifrado · parámetros · .env</text>
             <text x="380" y="196" text-anchor="middle" fill="var(--ink-soft)">Tramo 7 · Scrum / Kanban: cómo se organiza el equipo que construye el puente</text>
           </g>
         </svg>
-        <div class="cap">SQL es el idioma de la base. LINQ es de C#: Entity Framework lo traduce a SQL por ti.</div>
+        <div class="cap">👻 El fantasma entra por el tramo 4 si el conector no es seguro. SQL es el idioma de la base. LINQ es de C#: Entity Framework lo traduce a SQL por ti.</div>
       </div>
     </header>
 
@@ -377,7 +392,7 @@ cmd.Parameters.AddWithValue("usuario", usuario);   // el dato viaja aparte del S
 cmd.Parameters.AddWithValue("clave", clave);</pre>
 
       <div class="sim" id="sim">
-        <p class="sim-title">Simulador · ataque del Fantasma Inyector</p>
+        <p class="sim-title">Simulador · el Fantasma Inyector 👻</p>
         <p>Escribe un usuario y una clave para el login de <code>codigos_acceso</code>, o usa los ataques de ejemplo. Compara cómo se ve el SQL en cada versión.</p>
         <div class="presets">
           <button type="button" data-u="mateo" data-c="Cometa77">Login normal</button>
@@ -534,14 +549,14 @@ await db.SaveChangesAsync();                  // INSERT</pre>
       <div><button class="btn" type="button" id="reset">Borrar mi progreso</button> <span id="resetMsg" class="mono" aria-live="polite"></span></div>
     </section>
 
-    <footer>Discamus Academy · Plano DA-07 · El progreso se guarda solo en este navegador.</footer>
+    <footer>Discamus Academy · Plano DA-31 · Feliz Halloween 🎃 · El progreso se guarda solo en este navegador.</footer>
   </main>
 </div>
 
 <script type="text/plain" id="seed">__SEED_SQL__</script>
 <script>
 (() => {
-  const KEY = 'puente-cuantico-v1';
+  const KEY = 'puente-embrujado-v1';
   const load = () => { try { return new Set(JSON.parse(localStorage.getItem(KEY) || '[]')); } catch { return new Set(); } };
   const save = s => { try { localStorage.setItem(KEY, JSON.stringify([...s])); } catch {} };
   const esc = s => s.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -597,7 +612,7 @@ await db.SaveChangesAsync();                  // INSERT</pre>
     if (exp) li.appendChild(exp);
     box.addEventListener('change', () => { box.checked ? done.add(id) : done.delete(id); save(done); render(); });
   });
-  const RANKS = [[0, 'Recluta'], [.25, 'Piloto'], [.5, 'Ingeniero'], [.8, 'Capitán'], [1, 'Arquitecto del Puente']];
+  const RANKS = [[0, 'Alma en pena'], [.25, 'Murciélago del SQL'], [.5, 'Bruja de las Tablas'], [.8, 'Vampiro del Código'], [1, 'Guardián del Puente Embrujado']];
   function render() {
     const total = items.length, n = items.filter(li => done.has(li.dataset.id)).length, pct = n / total;
     items.forEach(li => li.classList.toggle('checked', done.has(li.dataset.id)));

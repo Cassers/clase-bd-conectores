@@ -1,5 +1,5 @@
 -- =====================================================================
--- Discamus Academy · Operación Puente Cuántico
+-- Discamus Academy · Operación Puente Embrujado (Halloween)
 -- Base de datos inicial (PostgreSQL / Supabase)
 -- Se puede re-ejecutar: borra todo y lo deja como nuevo.
 -- =====================================================================
