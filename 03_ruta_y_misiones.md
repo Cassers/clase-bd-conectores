@@ -47,6 +47,7 @@ Todos tus temas encajan en una sola cadena. No se estudian sueltos: cada paso ne
 
 ## 🛠️ Preparación
 
+0. Descarga el material: [github.com/Cassers/clase-bd-conectores](https://github.com/Cassers/clase-bd-conectores) (`git clone https://github.com/Cassers/clase-bd-conectores.git` o **Code → Download ZIP**).
 1. Crea un proyecto gratis en [supabase.com](https://supabase.com) → **SQL Editor** → **New query**.
 2. Pega `01_base_puente.sql` y dale **Run**. Debe mostrar **8 tripulantes**.
 3. Instala el [.NET 8 SDK](https://dotnet.microsoft.com/download) y comprueba con `dotnet --version`.
